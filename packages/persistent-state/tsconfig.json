@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@nicolopadovan/persistent-state": ["./src/index.ts"],
+      "@nicolopadovan/persistent-state/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "test", "tsup.config.ts"]
+}

@@ -1,0 +1,62 @@
+:root {
+  --sl-color-accent-low: hsl(166, 55%, 13%);
+  --sl-color-accent: hsl(164, 72%, 42%);
+  --sl-color-accent-high: hsl(160, 70%, 82%);
+  --sl-content-width: 48rem;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: hsl(158, 60%, 89%);
+  --sl-color-accent: hsl(166, 85%, 28%);
+  --sl-color-accent-high: hsl(168, 80%, 18%);
+}
+
+.site-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3 {
+  letter-spacing: -0.015em;
+}
+
+.hero h1 {
+  letter-spacing: -0.03em;
+}
+
+.sl-markdown-content table {
+  font-size: var(--sl-text-sm);
+}
+.card-grid > .card {
+  --sl-card-border: var(--sl-color-accent);
+  --sl-card-bg: var(--sl-color-accent-low);
+}
+
+.sidebar-content ul ul summary {
+  padding-block: 0.3em;
+}
+
+.sidebar-content ul ul summary .large {
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--sl-color-gray-2);
+}
+
+@media (min-width: 50rem) {
+  .sidebar-content ul ul summary .large {
+    font-size: var(--sl-text-sm);
+  }
+}
+
+.sidebar-content a.sidebar-heading {
+  padding-inline-start: 1.25rem;
+  padding-block: 0.15em;
+  font-size: var(--sl-text-xs);
+  color: var(--sl-color-gray-3);
+}
+
+.sidebar-content a.sidebar-heading:hover {
+  color: var(--sl-color-white);
+}

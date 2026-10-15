@@ -1,0 +1,213 @@
+---
+title: Getting started
+description: Install persistent-state, declare a persisted key once, and use it in React and in a Next.js App Router application.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+
+This page lists what persistent-state needs, installs it, and takes you from declaring a key to using it in React and in
+a Next.js App Router application.
+
+:::caution[0.x releases may break]
+persistent-state is in its 0.x series. Every 0.x minor release may contain breaking changes. Pin the minor version
+you depend on and read the [migration page](/help/migrating/) before you upgrade.
+:::
+
+## System requirements
+
+| Environment | Requirement                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Node.js     | 22 or later, for building and for server rendering. The core imports nothing from React or Node.js, so `readCookieState` also runs in edge runtimes.                                                                                             |
+| Browsers    | Chrome and Edge 94, Firefox 93, Safari and iOS Safari 15.4 or later. CI checks the package's code and syntax against these versions. Your bundler transpiles it if you target older browsers.                                                    |
+| React       | 18.3 or 19, only for `@nicolopadovan/persistent-state/react` and `@nicolopadovan/persistent-state/next`.                                                                                                                                         |
+| Next.js     | 15 or 16, only for `@nicolopadovan/persistent-state/next`, in the App Router.                                                                                                                                                                    |
+| TypeScript  | 5.4 or later, because the public types use `NoInfer`. The entry points are resolved through the `exports` field, so `moduleResolution` must be `bundler`, `node16` or `nodenext`. Projects created with `create-next-app` already use `bundler`. |
+
+## Install the package
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @nicolopadovan/persistent-state
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash
+    npm install @nicolopadovan/persistent-state
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @nicolopadovan/persistent-state
+    ```
+  </TabItem>
+  <TabItem label="bun">
+    ```bash
+    bun add @nicolopadovan/persistent-state
+    ```
+  </TabItem>
+</Tabs>
+
+persistent-state has no runtime dependencies. `react` and `next` are optional peer dependencies: install them only for
+the entry points that use them.
+
+## Entry points
+
+persistent-state is published as ES modules only, with type declarations and source maps. Each entry point is declared
+in the package's `exports` field, and the package is marked `"sideEffects": false`, so bundlers include only the
+exports you import.
+
+| Entry point                             | Runs in                     | Exports                                                                                      |
+| --------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| `@nicolopadovan/persistent-state`       | Browser, Node.js, edge      | `persistentState`, `refreshConsent`, `readCookieState`, `PersistentStateError` and the types |
+| `@nicolopadovan/persistent-state/react` | Browser and React SSR       | `useStoredState`, `usePersistentState`, `CookieValuesProvider`                               |
+| `@nicolopadovan/persistent-state/next`  | Next.js server (App Router) | `PersistentStateProvider`, `readState`                                                       |
+
+`@nicolopadovan/persistent-state/react` starts with a `'use client'` directive, so a Server Component can render
+`CookieValuesProvider` without adding your own client boundary; the hooks run only in Client Components.
+`@nicolopadovan/persistent-state/next` imports `next/headers`: import it only from Server Components, Server Actions
+and Route Handlers. The full list of exports, with signatures, is in the [API reference](/reference/api/).
+
+## Declare a key
+
+Declare each persisted key once, at module scope, and export the result. Put it in a module that both server and
+client code can import, so do not add `'use client'` to it.
+
+```ts title="lib/state.ts"
+import { persistentState } from '@nicolopadovan/persistent-state'
+
+export const sidebarOpen = persistentState('sidebar-open', { default: true })
+```
+
+The first argument is the key under which the value is stored. `default` is required: it is the value used when nothing
+valid is stored, on the server, and during hydration. The type of the value is inferred from `default`, so
+`sidebarOpen` holds a `boolean`. Without a `storage` option the value lives in `localStorage`.
+
+The object that `persistentState()` returns has `get()`, `set()`, `reset()`, `subscribe()` and `isPersistent()`, and
+works outside React:
+
+```ts
+sidebarOpen.set(false)
+sidebarOpen.set((open) => !open)
+sidebarOpen.get() // true
+sidebarOpen.reset() // removes the stored item and returns to the default
+```
+
+Every option has a default; set only what you need.
+
+| Option                                                     | Use it to                                                                                              | Guide                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `storage`                                                  | Choose `'cookie'`, `'localStorage'` or `'sessionStorage'`, and set the cookie attributes.              | [Choosing a storage](/guides/choosing-a-storage/)                |
+| `schema`, `version`, `migrate`                             | Validate stored values and upgrade values written by older code.                                       | [Schemas and migrations](/guides/schemas-and-migrations/)        |
+| `expires`                                                  | Limit how long a value is kept.                                                                        | [Schemas and migrations](/guides/schemas-and-migrations/#expiry) |
+| `consent`                                                  | Store only while the visitor has allowed it.                                                           | [Consent](/guides/consent/)                                      |
+| `namespace`, `debounceMs`, `sync`, `serializer`, `onError` | Prefix the stored name, delay writes, follow other tabs, change the stored text, and receive failures. | [API reference](/reference/api/)                                 |
+
+## Use it in React
+
+`useStoredState()` takes a definition and returns a tuple, like `useState` with a third element.
+
+```tsx title="components/sidebar-toggle.tsx"
+'use client'
+
+import { useStoredState } from '@nicolopadovan/persistent-state/react'
+import { sidebarOpen } from '@/lib/state'
+
+export function SidebarToggle() {
+  const [open, setOpen] = useStoredState(sidebarOpen)
+  return (
+    <button aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+      {open ? 'Close' : 'Open'} the sidebar
+    </button>
+  )
+}
+```
+
+- `setOpen` accepts a value or an updater function, and keeps its identity across renders.
+- Every component that uses the same definition shares one value and re-renders together. Other tabs follow changes by
+  default.
+- The third element, `{ reset, isPersistent }`, removes the stored item and returns to the default, and tells you
+  whether the value is being stored. `isPersistent` is `false` while the value lives only in memory: when the storage is
+  blocked or full, or while `consent` is not given.
+
+```tsx
+const [open, setOpen, { reset, isPersistent }] = useStoredState(sidebarOpen)
+```
+
+<details>
+<summary>Why does a <code>localStorage</code> value appear after the first render?</summary>
+
+React compares the HTML the server rendered with the first render on the client. The server never reads Web Storage,
+and the client must not read it while hydrating, or the two would differ. Definitions in `localStorage` and
+`sessionStorage` therefore render their default during server rendering and hydration, and the stored value follows
+right after hydration.
+
+Cookie definitions can avoid that extra render, because a server can read cookies. See
+[Choosing a storage](/guides/choosing-a-storage/#server-rendering-and-hydration).
+
+</details>
+
+For a key used in one component only, `usePersistentState(key, initial, options)` from the same entry point declares the
+key inside the component and returns the same tuple. Prefer a definition for keys used in more than one place or read
+on the server.
+
+## Render cookie state on the server in Next.js
+
+A cookie is the one storage the server can read. To render a stored value in the first HTML, declare it with
+`storage: 'cookie'`, list it in `PersistentStateProvider`, and use it with `useStoredState()`.
+
+```ts title="lib/state.ts"
+import { persistentState } from '@nicolopadovan/persistent-state'
+
+export type Theme = 'light' | 'dark' | 'system'
+
+export const theme = persistentState<Theme, 'cookie'>('theme', { default: 'system', storage: 'cookie' })
+```
+
+```tsx title="app/layout.tsx"
+import type { ReactNode } from 'react'
+import { PersistentStateProvider } from '@nicolopadovan/persistent-state/next'
+import { theme } from '@/lib/state'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <PersistentStateProvider states={[theme]}>{children}</PersistentStateProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+```tsx title="components/theme-toggle.tsx"
+'use client'
+
+import { useStoredState } from '@nicolopadovan/persistent-state/react'
+import { theme } from '@/lib/state'
+
+export function ThemeToggle() {
+  const [value, setValue] = useStoredState(theme)
+  return (
+    <select value={value} onChange={(event) => setValue(event.target.value as typeof value)}>
+      <option value="system">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  )
+}
+```
+
+The server renders `ThemeToggle` with the theme in the visitor's cookie, and the client hydrates with the same value, so
+the page never shows the default first. `PersistentStateProvider` reads cookies, so it makes the routes below it
+dynamic: render it in the layout that needs it. The [Next.js guide](/guides/nextjs/) covers this, reading cookie state in
+Server Components, and what is not possible yet.
+
+## Next steps
+
+- [Choosing a storage](/guides/choosing-a-storage/): cookie, `localStorage` or `sessionStorage`.
+- [Next.js App Router](/guides/nextjs/): render stored state on the server without a flash.
+- [Schemas and migrations](/guides/schemas-and-migrations/): validate stored values and change their shape safely.
+- [Consent](/guides/consent/): store only while the visitor has allowed it.

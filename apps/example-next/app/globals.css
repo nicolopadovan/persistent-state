@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+main {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+[data-theme='light'] {
+  color: #111827;
+  background: #f8fafc;
+}
+
+[data-theme='dark'] {
+  color: #f8fafc;
+  background: #111827;
+}

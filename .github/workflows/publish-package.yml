@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: release
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      unpublished: ${{ steps.check.outputs.unpublished }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+
+      # Opens or updates the "Release persistent-state" pull request while changesets are pending.
+      - id: changesets
+        uses: changesets/action@v2
+        with:
+          version-script: pnpm changeset version
+          commit-message: 'chore: release persistent-state'
+          pr-title: Release persistent-state
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The action leaves the release branch checked out, so check only once no changeset is pending.
+      - id: check
+        if: steps.changesets.outputs.has-changesets == 'false'
+        run: |
+          version=$(node -p "require('./packages/persistent-state/package.json').version")
+          if npm view "@nicolopadovan/persistent-state@$version" version --silent >/dev/null 2>&1; then
+            echo "unpublished=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "unpublished=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: version
+    if: needs.version.outputs.unpublished == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      - run: |
+          pnpm turbo run typecheck lint test build --filter @nicolopadovan/persistent-state
+          pnpm --filter @nicolopadovan/persistent-state check:package
+
+      # npm (not pnpm) publishes, so npm's trusted publishing (OIDC) applies: no token.
+      - name: Publish
+        working-directory: packages/persistent-state
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [[ "$version" == *-* ]]; then npm publish --tag next; else npm publish; fi
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            tag -a "v$version" -m "v$version"
+          git push origin "v$version"
