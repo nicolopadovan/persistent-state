@@ -94,9 +94,9 @@ persistent-state is not the smallest or the most widely used option. Choose anot
 - **You already use Mantine or usehooks-ts and need no cookies, server reads or validation.** The storage hooks ship with
   the library, and adding another dependency buys nothing.
 - **You need asynchronous storage today.** zustand `persist` and jotai `atomWithStorage` document async storages such as
-  React Native's AsyncStorage. persistent-state's storage is synchronous until 0.8.0.
+  React Native's AsyncStorage. persistent-state's storage is synchronous until 0.9.0.
 - **You do not use React.** persistent-state's core has no React dependency, but the bindings for Vue, Svelte and Solid
-  arrive in 0.5.0 to 0.7.0. See the [roadmap](/help/roadmap/).
+  arrive in 0.6.0 to 0.8.0. See the [roadmap](/help/roadmap/).
 - **You run React older than 18.3 or Node.js older than 22.** persistent-state does not support them.
 
 Choose persistent-state when state that the first paint depends on, such as a theme, should render correctly on the

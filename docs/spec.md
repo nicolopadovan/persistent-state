@@ -545,21 +545,22 @@ on page hide.
 
 ## Roadmap
 
-1.0.0 follows the roadmap core (0.4.0 to 0.10.0). Each row is its own version and GitHub milestone, in this order:
+1.0.0 follows the roadmap core (0.4.0 to 0.11.0). Each row is its own version and GitHub milestone, in this order:
 
-| Version | Item                                                                                                                                         | Priority |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 0.4.0   | Server writes: `writeState` and `resetState` in `/next` for Server Actions and Route Handlers; core `serializeStateCookie` for other servers | High     |
-| 0.5.0   | Vue binding (`/vue` composable) and Nuxt server reads                                                                                        | High     |
-| 0.6.0   | Svelte binding (`/svelte`) and SvelteKit server reads                                                                                        | Medium   |
-| 0.7.0   | Solid binding (`/solid`) and SolidStart server reads                                                                                         | Medium   |
-| 0.8.0   | Async storage: a storage driver interface, an IndexedDB driver, and the loading state hooks need for it (also covers React Native storage)   | High     |
-| 0.9.0   | URL-state interop: seed a definition from a search parameter and mirror it back, for shareable links                                         | Medium   |
-| 0.10.0  | Devtools: an `inspect()` API listing every definition, its value, storage and persistence, and a small in-page panel                         | Low      |
-| 1.0.0   | API freeze: deprecated aliases removed, semver guarantees from here on                                                                       | High     |
-| 1.1.0   | Interop: a zustand `persist` storage and a jotai `atomWithStorage` storage backed by definitions                                             | Low      |
-| 1.2.0   | Server-synced storage: a driver that syncs through an endpoint you provide, across devices, with an offline queue                            | Medium   |
-| 1.3.0   | A hosted sync backend (under consideration; depends on 1.2.0 being used)                                                                     | Low      |
+| Version | Item                                                                                                                                                                                                                                                                                                              | Priority |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0.4.0   | Server writes: `writeState` and `resetState` in `/next` for Server Actions and Route Handlers; core `serializeStateCookie` for other servers                                                                                                                                                                      | High     |
+| 0.5.0   | Static rendering with cookie state: a documented static mode with a `hydrated` flag; `PersistentStateProvider` inside `<Suspense>` with Cache Components; `<PersistentStateScript>` for attributes or CSS variables before the first paint; a middleware rewrite helper for prerendered variants per cookie value | High     |
+| 0.6.0   | Vue binding (`/vue` composable) and Nuxt server reads                                                                                                                                                                                                                                                             | High     |
+| 0.7.0   | Svelte binding (`/svelte`) and SvelteKit server reads                                                                                                                                                                                                                                                             | Medium   |
+| 0.8.0   | Solid binding (`/solid`) and SolidStart server reads                                                                                                                                                                                                                                                              | Medium   |
+| 0.9.0   | Async storage: a storage driver interface, an IndexedDB driver, and the loading state hooks need for it (also covers React Native storage)                                                                                                                                                                        | High     |
+| 0.10.0  | URL-state interop: seed a definition from a search parameter and mirror it back, for shareable links                                                                                                                                                                                                              | Medium   |
+| 0.11.0  | Devtools: an `inspect()` API listing every definition, its value, storage and persistence, and a small in-page panel                                                                                                                                                                                              | Low      |
+| 1.0.0   | API freeze: deprecated aliases removed, semver guarantees from here on                                                                                                                                                                                                                                            | High     |
+| 1.1.0   | Interop: a zustand `persist` storage and a jotai `atomWithStorage` storage backed by definitions                                                                                                                                                                                                                  | Low      |
+| 1.2.0   | Server-synced storage: a driver that syncs through an endpoint you provide, across devices, with an offline queue                                                                                                                                                                                                 | Medium   |
+| 1.3.0   | A hosted sync backend (under consideration; depends on 1.2.0 being used)                                                                                                                                                                                                                                          | Low      |
 
 ## Acceptance criteria
 
